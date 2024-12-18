@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Book Recommender System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Welcome to BookBlossom</h1>
+            <p>Discover your next favorite book with personalized recommendations!!</p>
+        </header>
+
+        <div class="search-container">
+            <input type="text" id="book-search" placeholder="Start typing a book..." list="book-list">
+            <datalist id="book-list">
+                {% for book in book_names %}
+                    <option value="{{ book }}">
+                {% endfor %}
+            </datalist>
+        </div>
+
+        <button id="recommend-btn" class="btn">Show Recommendations</button>
+
+        <div id="recommendations" class="recommendations">
+            <!-- Recommended books will appear here -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('recommend-btn').addEventListener('click', function() {
+            let bookName = document.getElementById('book-search').value;
+
+            if (!bookName) {
+                alert('Please enter a book name');
+                return;
+            }
+
+            fetch('/recommend', {
+                method: 'POST',
+                body: new URLSearchParams({ 'book_name': bookName }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const recommendationsDiv = document.getElementById('recommendations');
+                recommendationsDiv.innerHTML = '';  // Clear any previous recommendations
+
+                data.recommended_books.forEach((book, index) => {
+                    const bookCard = document.createElement('div');
+                    bookCard.classList.add('book-card');
+
+                    const bookTitle = document.createElement('h3');
+                    bookTitle.textContent = book;
+
+                    const bookImage = document.createElement('img');
+                    bookImage.src = data.poster_urls[index];
+                    bookImage.alt = book;
+
+                    bookCard.appendChild(bookTitle);
+                    bookCard.appendChild(bookImage);
+
+                    recommendationsDiv.appendChild(bookCard);
+                });
+            })
+            .catch(err => alert('Error fetching recommendations: ' + err));
+        });
+    </script>
+</body>
+</html>
